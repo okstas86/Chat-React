@@ -1,7 +1,14 @@
 import React from 'react'
 
-export default function ChatPage() {
+export  const ChatPage=({socket})=> {
   return (
-    <div>ChatPage</div>
+    
+    <div className="chat-page">
+      <Sidebar />
+      <main>
+        <Body />
+        <MessageBlock/>
+      </main>
+    </div>
   )
 }
