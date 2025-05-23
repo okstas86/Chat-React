@@ -13,8 +13,12 @@ const io = require('socket.io')(http, {
   }
 })
 
-io.on('conection', (socket) => {
+io.on('connection', (socket) => {
   console.log(`${socket.id} user connected`)
+  socket.on('message', (data) => {
+    console.log('Message', data)
+    io.emit('response', data)
+  })
   socket.on('disconnect', () => {
     console.log(`${socket.id} user disconnected`)
     })
@@ -25,7 +29,7 @@ app.get('api', (req,res) => {
     message: 'Hello',
   })
 })
-app.use(cors)
+app.use(cors())
 
 http.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
