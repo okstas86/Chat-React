@@ -1,44 +1,68 @@
-import React, { useEffect } from 'react'
-import Sidebar from '../components/Sidebar.jsx'
-import Body from '../components/Body.jsx'
-import MessageBlock from '../components/MessageBlock.jsx'
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react';
+import Sidebar from '../components/Sidebar.jsx';
+import Body from '../components/Body.jsx';
+import MessageBlock from '../components/MessageBlock.jsx';
 
 const ChatPage = ({ socket }) => {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState([]);
+  const [status, setStatus] = useState('');
   useEffect(() => {
-  const handleResponse = (data) => {
-    setMessages(prev => [...prev, data])
-  }
+  socket.emit('getMessages');
 
-  socket.on('response', handleResponse)
+  const handleHistory = (data) => {
+    setMessages(data); 
+  };
+
+  socket.on('messageHistory', handleHistory);
 
   return () => {
-    socket.off('response', handleResponse) // удаляем слушатель при размонтировании
+    socket.off('messageHistory', handleHistory);
+  };
+}, [socket]);
+
+  useEffect(() => {
+    
+    const handleResponse = (data) => {
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socket.on('response', handleResponse);
+
+    return () => {
+      socket.off('response', handleResponse);
+    };
+  }, [socket]);
+  useEffect(() => {
+    
+
+    socket.on('responseTyping', (data) => setStatus(data));
+  
+
+  }, [socket]);
+
+  useEffect(() => {
+  const username = localStorage.getItem('user')
+  if (username && socket) {
+    const userData = {
+      user: username,
+      socketId: socket.id,
+    };
+    console.log('Отправка нового пользователя на сервер:', userData);
+    socket.emit('newUser', userData);
   }
-}, [socket])
+}, [socket]);
 
-  // useEffect(() => {
-  //   socket.on('response', (data) =>
-  //     setMessages([...messages, data])
-  //     )
-
-  // })
   return (
     <div className="chat-page flex h-screen bg-gray-100">
-      
       <aside className="w-64 bg-white border-r shadow-md hidden sm:block">
-        <Sidebar />
+        <Sidebar socket={socket} />
       </aside>
 
-   
       <main className="flex-1 flex flex-col">
-      
         <div className="p-4 bg-white shadow-md border-b">
-          <Body messages={messages} />
+          <Body messages={messages} socket={socket} status={status} />
         </div>
 
-       
         <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
           <MessageBlock socket={socket} />
         </div>
@@ -47,5 +71,4 @@ const ChatPage = ({ socket }) => {
   );
 };
 
-
-export default ChatPage
+export default ChatPage;
